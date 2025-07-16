@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модель жизненного цикла и категоризации продуктов</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.4.0"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Strategic Neutrals -->
+    <!-- Application Structure Plan: A single-view application focused on visualizing the provided strategic framework. The primary element is a conceptual Product Life Cycle chart showing idealized curves for different product categories (Core, Priority, etc.). Interaction is provided through checkboxes to toggle the visibility of each conceptual curve. Below the chart, two dedicated sections, built with a clear grid layout, present the user's detailed definitions for both "Role-based Categories" and "Status-based Stages". This structure is designed to be educational, allowing users to visually compare the theoretical curves on the chart with their corresponding strategic definitions listed below. -->
+    <!-- Visualization & Content Choices: 
+        - Goal: Visualize a Framework: Use a multi-series line chart (Chart.js/Canvas) to plot idealized demand curves over a generic time axis for "Базовый", "Приоритетный", "Экспериментальный", and "Сезонный" products. The shape of each curve visually represents its definition.
+        - Interaction: Checkboxes control the visibility of each conceptual curve, allowing for focused study or comparison.
+        - Goal: Inform & Define: Use styled cards in a grid layout to present the user's detailed text descriptions for each category and status. This creates a reference library directly linked to the chart.
+        - Goal: Show Progression: Use vertical line annotations on the chart to represent the transition points between product statuses (e.g., from "Новинка" to "Активный"), visually mapping the status lifecycle onto the demand curves.
+        - Justification: This approach turns an abstract framework into a tangible, interactive model. It provides a visual language for discussing strategy and classifying products, which is more effective than text alone. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 60vh;
+            max-height: 500px;
+            background-color: #ffffff;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .legend-checkbox {
+            transform: scale(1.2);
+            margin-right: 0.5rem;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            border-left: 4px solid;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto px-4 py-8">
+
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-gray-900">Модель жизненного цикла продуктов</h1>
+            <p class="text-xl text-gray-600 mt-2">Визуализация стратегических категорий и статусов</p>
+        </header>
+
+        <div class="chart-container">
+            <canvas id="plcFrameworkChart"></canvas>
+        </div>
+
+        <div class="mt-8 p-6 bg-white rounded-lg shadow">
+            <h3 class="text-2xl font-bold mb-4">Управление графиком</h3>
+            <div id="controls" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            </div>
+        </div>
+
+        <div class="mt-8">
+            <h2 class="text-3xl font-bold text-center mb-6">Категоризация товаров по роли</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="card" style="border-color: #3b82f6;">
+                    <h4 class="font-bold text-lg text-blue-700">Базовый</h4>
+                    <p class="text-gray-600 mt-2">Товар, который занимает значительную долю от всего оборота в ценовой группе и дает постоянные, стабильные продажи.</p>
+                </div>
+                <div class="card" style="border-color: #16a34a;">
+                    <h4 class="font-bold text-lg text-green-700">Приоритетный</h4>
+                    <p class="text-gray-600 mt-2">Товар с высоким потенциалом, является приоритетным в рекламе. Продажи могут быть не сбалансированы и проявляться рывками. В будущем должен перерасти в категорию "Базовый".</p>
+                </div>
+                <div class="card" style="border-color: #f97316;">
+                    <h4 class="font-bold text-lg text-orange-700">Экспериментальный</h4>
+                    <p class="text-gray-600 mt-2">Товар для ассортимента с небольшой долей. Необходимо тщательно следить за показателями. Как только заказы вырастают, переводить в "Приоритетный".</p>
+                </div>
+                <div class="card" style="border-color: #6366f1;">
+                    <h4 class="font-bold text-lg text-indigo-700">Сезонный</h4>
+                    <p class="text-gray-600 mt-2">Товар, который занимает значительную долю в определенный сезон и имеет низкие продажи в остальное время.</p>
+                </div>
+                <div class="card" style="border-color: #8b5cf6;">
+                    <h4 class="font-bold text-lg text-purple-700">Уникальный</h4>
+                    <p class="text-gray-600 mt-2">Товар, который образует уникальные комплекты или продается только у нас. Может не иметь аналогов на рынке.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-10">
+            <h2 class="text-3xl font-bold text-center mb-6">Статусы товара в жизненном цикле</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="card" style="border-color: #d1d5db;">
+                    <h4 class="font-bold text-lg">Вводимый</h4>
+                    <p class="text-gray-600 mt-2">Товар добавлен в номенклатуру, но еще не выставлен на продажу.</p>
+                </div>
+                 <div class="card" style="border-color: #22c55e;">
+                    <h4 class="font-bold text-lg">Новинка</h4>
+                    <p class="text-gray-600 mt-2">Товар выставлен на сайт. Срок в этом статусе — 30 дней. После этого переходит в "Активный" или "Выводимый".</p>
+                </div>
+                <div class="card" style="border-color: #3b82f6;">
+                    <h4 class="font-bold text-lg">Активный</h4>
+                    <p class="text-gray-600 mt-2">Товар, который продается более 30 дней и показывает стабильные результаты.</p>
+                </div>
+                 <div class="card" style="border-color: #facc15;">
+                    <h4 class="font-bold text-lg">Товар в наличии</h4>
+                    <p class="text-gray-600 mt-2">Ключевой, топовый товар, который постоянно есть на складе в количестве более 3 единиц.</p>
+                </div>
+                <div class="card" style="border-color: #ef4444;">
+                    <h4 class="font-bold text-lg">Выводимый</h4>
+                    <p class="text-gray-600 mt-2">Товар, который выводится из продажи. Может быть выставлен на распродажу.</p>
+                </div>
+                <div class="card" style="border-color: #6b7280;">
+                    <h4 class="font-bold text-lg">Архивный</h4>
+                    <p class="text-gray-600 mt-2">Товара нет в наличии и продаже он больше не подлежит. Данные используются для анализа.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const plcData = {
+                labels: Array.from({ length: 24 }, (_, i) => `Месяц ${i + 1}`),
+                categories: [
+                    {
+                        name: 'Базовый',
+                        demand: [80, 82, 81, 85, 83, 84, 86, 85, 87, 88, 86, 89, 90, 88, 89, 91, 90, 92, 93, 91, 92, 94, 93, 95],
+                        color: '#3b82f6',
+                        visible: true
+                    },
+                    {
+                        name: 'Приоритетный',
+                        demand: [5, 8, 12, 18, 25, 35, 48, 60, 70, 78, 85, 90, 92, 93, 91, 89, 88, 87, 86, 85, 84, 83, 82, 81],
+                        color: '#16a34a',
+                        visible: true
+                    },
+                    {
+                        name: 'Экспериментальный',
+                        demand: [1, 2, 1, 3, 2, 4, 5, 4, 6, 7, 6, 8, 10, 12, 15, 18, 22, 25, 28, 30, 32, 33, 34, 35],
+                        color: '#f97316',
+                        visible: true
+                    },
+                    {
+                        name: 'Сезонный',
+                        demand: [10, 12, 15, 20, 50, 80, 75, 40, 20, 15, 10, 8, 11, 13, 16, 22, 55, 85, 78, 42, 22, 16, 11, 9],
+                        color: '#6366f1',
+                        visible: true
+                    }
+                ]
+            };
+
+            const controlsContainer = document.getElementById('controls');
+            const datasets = [];
+
+            plcData.categories.forEach((category, index) => {
+                datasets.push({
+                    label: category.name,
+                    data: category.demand,
+                    borderColor: category.color,
+                    backgroundColor: `${category.color}33`,
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    hidden: !category.visible
+                });
+
+                const controlHtml = `
+                    <label for="cat-${index}" class="flex items-center cursor-pointer text-lg">
+                        <input type="checkbox" id="cat-${index}" data-index="${index}" class="legend-checkbox" ${category.visible ? 'checked' : ''} style="accent-color: ${category.color};">
+                        <span style="border-bottom: 2px solid ${category.color}; padding-bottom: 2px;">${category.name}</span>
+                    </label>
+                `;
+                controlsContainer.innerHTML += controlHtml;
+            });
+
+            const ctx = document.getElementById('plcFrameworkChart').getContext('2d');
+            const plcChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: plcData.labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y.toFixed(0)} условных ед. спроса`;
+                                }
+                            }
+                        },
+                        annotation: {
+                           annotations: {
+                                newProductLine: {
+                                    type: 'line',
+                                    xMin: 1,
+                                    xMax: 1,
+                                    borderColor: '#22c55e',
+                                    borderWidth: 2,
+                                    borderDash: [6, 6],
+                                    label: {
+                                        content: 'Новинка (30 дней)',
+                                        enabled: true,
+                                        position: 'start',
+                                        backgroundColor: 'rgba(255,255,255,0.7)',
+                                        color: '#15803d'
+                                    }
+                                },
+                                activeLine: {
+                                    type: 'line',
+                                    xMin: 2,
+                                    xMax: 2,
+                                    borderColor: '#3b82f6',
+                                    borderWidth: 2,
+                                    borderDash: [6, 6],
+                                    label: {
+                                        content: 'Активный',
+                                        enabled: true,
+                                        position: 'end',
+                                        backgroundColor: 'rgba(255,255,255,0.7)',
+                                        color: '#1d4ed8'
+                                    }
+                                }
+                           }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Время (Жизненный цикл)',
+                                font: { size: 14 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Объем продаж / Спрос',
+                                font: { size: 14 }
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            controlsContainer.addEventListener('change', (e) => {
+                if (e.target.type === 'checkbox') {
+                    const index = e.target.dataset.index;
+                    plcChart.setDatasetVisibility(index, e.target.checked);
+                    plcChart.update();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
